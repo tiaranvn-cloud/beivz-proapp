@@ -144,6 +144,54 @@ input{-webkit-text-fill-color:#111!important}
 .loading-overlay.hidden{display:none}
 .spinner{width:20px;height:20px;border:2px solid #e0e0e0;border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* ── PRODUK JADI & KALENDER ── */
+.t-pj{background:#fff!important;color:#1a6e8a!important;border-color:#1a6e8a!important;font-weight:500}
+.t-jadwal{background:#fff!important;color:#7a5a1a!important;border-color:#7a5a1a!important;font-weight:500}
+.t-master{background:#fff!important;color:#4a4a4a!important;border-color:#4a4a4a!important;font-weight:500}
+.pj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:500px){.pj-grid{grid-template-columns:1fr}}
+.pj-row{display:grid;grid-template-columns:1fr 90px;gap:6px;align-items:center;padding:7px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:var(--radius)}
+.pj-row label{font-size:11px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pj-row input{background:#fff!important;border:1px solid #ccc!important;border-radius:4px;padding:5px 7px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;text-align:right}
+.pj-row input:focus{border-color:#1a6e8a!important}
+.pj-stok-table{width:100%;border-collapse:collapse;background:#fff}
+.pj-stok-table th{font-size:10px;letter-spacing:0.08em;color:#999;text-transform:uppercase;padding:7px 10px;text-align:left;border-bottom:1px solid #e0e0e0;background:#f5f5f5;font-weight:400}
+.pj-stok-table td{padding:8px 10px;font-size:12px;border-bottom:1px solid #f0f0f0;color:#111;vertical-align:middle}
+.pj-stok-table tr:last-child td{border-bottom:none}
+.pj-stok-table tr:hover td{background:#fafafa}
+.hari-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:500;border:1px solid}
+.hari-ok{color:#1a7a3a;border-color:#1a7a3a;background:#f0faf4}
+.hari-warn{color:#a06000;border-color:#a06000;background:#fffaf0}
+.hari-low{color:#cc2200;border-color:#cc2200;background:#fff5f5}
+.hari-none{color:#999;border-color:#ddd;background:#f9f9f9}
+/* Calendar */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav-title{font-size:14px;font-weight:500;letter-spacing:0.08em;color:#111}
+.cal-nav-btn{background:#fff!important;border:1px solid #ccc!important;color:#555!important;padding:5px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;font-family:inherit}
+.cal-nav-btn:hover{border-color:#888!important;color:#111!important}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:10px;color:#999;letter-spacing:0.06em;text-transform:uppercase;padding:4px 0}
+.cal-day{min-height:52px;border:1px solid #e0e0e0;border-radius:5px;padding:4px;cursor:default;background:#fff;position:relative;transition:border .1s}
+.cal-day.other-month{background:#f9f9f9}
+.cal-day.today{border-color:#1a6e8a;background:#f0f7fa}
+.cal-day.has-event{cursor:pointer}
+.cal-day.has-event:hover{border-color:#7a5a1a;background:#fffdf5}
+.cal-day-num{font-size:11px;color:#999;font-weight:400;margin-bottom:2px}
+.cal-day.today .cal-day-num{color:#1a6e8a;font-weight:600}
+.cal-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:2px}
+.cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* Event modal */
+.event-modal{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:150;display:none;align-items:center;justify-content:center}
+.event-modal.open{display:flex}
+.event-box{background:#fff;border:1px solid #e0e0e0;border-radius:10px;width:380px;max-width:94vw;max-height:80vh;overflow-y:auto;padding:1.25rem}
+.event-box-title{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#7a5a1a;border-bottom:1px solid #e0e0e0;padding-bottom:8px;margin-bottom:12px}
+.event-sku-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5}
+.event-sku-row:last-child{border-bottom:none}
+.event-sku-name{font-size:12px;color:#111;font-weight:500}
+.event-sku-sub{font-size:10px;color:#999;margin-top:1px}
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.cal-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#555}
+.cal-legend-dot{width:8px;height:8px;border-radius:50%}
 </style>
 </head>
 <body>
@@ -177,8 +225,14 @@ input{-webkit-text-fill-color:#111!important}
   </div>
   <div class="nav-sep"></div>
   <div class="nav-group">
+    <button class="tab" onclick="switchTab('pj')" id="tab-pj">&#128666; Produk Jadi</button>
+    <button class="tab" onclick="switchTab('jadwal')" id="tab-jadwal">&#128197; Jadwal</button>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-group">
     <button class="tab" onclick="openResepModal()" id="tab-resep">&#9881; Resep</button>
     <button class="tab" onclick="openKalkModal()" id="tab-kalk">&#8998; Kalkulator</button>
+    <button class="tab" onclick="switchTab('master')" id="tab-master">&#9776; Master Data</button>
   </div>
 </div>
 
@@ -492,6 +546,233 @@ input{-webkit-text-fill-color:#111!important}
   </div>
 </div>
 
+<!-- ══ VIEW: PRODUK JADI ══ -->
+<div id="view-pj" style="display:none">
+
+  <!-- Opname / Stok Awal -->
+  <div class="card">
+    <div class="form-title" style="color:#1a6e8a">&#128666; Produk Jadi — Input Harian</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <div class="field" style="flex:0 0 auto">
+        <label>Tanggal</label>
+        <input type="date" id="pj-tgl" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:7px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit">
+      </div>
+      <div style="display:flex;gap:6px;margin-top:14px">
+        <button class="btn" style="background:#fff!important;color:#1a6e8a!important;border-color:#1a6e8a!important;font-size:11px" onclick="setPjMode('masuk')" id="pj-btn-masuk">+ Produksi Selesai</button>
+        <button class="btn" style="background:#fff!important;color:#cc2200!important;border-color:#cc2200!important;font-size:11px" onclick="setPjMode('keluar')" id="pj-btn-keluar">&#8722; Packing Keluar</button>
+      </div>
+    </div>
+    <div style="font-size:10px;letter-spacing:0.08em;color:#999;text-transform:uppercase;margin-bottom:8px" id="pj-mode-label">Mode: Produksi Selesai (stok masuk)</div>
+    <div class="pj-grid" id="pj-input-grid">
+      <!-- filled by JS -->
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn" style="background:#fff!important;color:#1a6e8a!important;border-color:#1a6e8a!important" onclick="savePjBatch()" id="pj-save-btn">+ Simpan Produksi Selesai</button>
+      <button class="btn btn-ghost" onclick="resetPjInputs()">Reset</button>
+    </div>
+  </div>
+
+  <!-- Stok Produk Jadi Sekarang -->
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <span class="tbl-title">Stok Produk Jadi Saat Ini</span>
+      <span style="font-size:10px;color:#999" id="pj-last-update"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table class="pj-stok-table">
+        <thead><tr>
+          <th>SKU</th>
+          <th style="text-align:right">Stok</th>
+          <th style="text-align:right">Buffer</th>
+          <th style="text-align:right">Avg/Hari</th>
+          <th style="text-align:center">Sisa Hari</th>
+          <th style="text-align:center">Status</th>
+          <th style="text-align:center">Setting</th>
+        </tr></thead>
+        <tbody id="pj-stok-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Riwayat Produk Jadi -->
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <span class="tbl-title">Riwayat Produk Jadi</span>
+      <span style="font-size:10px;color:#999" id="pj-log-count"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table class="tbl" style="table-layout:auto">
+        <thead><tr>
+          <th>Tanggal</th><th>SKU</th><th>Jenis</th><th style="text-align:right">Jumlah</th><th>Catatan</th><th></th>
+        </tr></thead>
+        <tbody id="pj-log-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: JADWAL PRODUKSI ══ -->
+<div id="view-jadwal" style="display:none">
+  <div class="card">
+    <div class="form-title" style="color:#7a5a1a">&#128197; Jadwal Produksi</div>
+    <div style="font-size:11px;color:#999;margin-bottom:12px">Jadwal dihitung otomatis dari rata-rata packing keluar & stok saat ini. Klik tanggal untuk detail produksi.</div>
+
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#cc2200"></div> Kritis (&lt;3 hari)</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#a06000"></div> Segera (&lt;7 hari)</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#1a7a3a"></div> Terjadwal</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#1a3a8a"></div> Manual</div>
+    </div>
+
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calPrev()">&#8592;</button>
+      <span class="cal-nav-title" id="cal-title"></span>
+      <button class="cal-nav-btn" onclick="calNext()">&#8594;</button>
+    </div>
+    <div style="margin-bottom:10px">
+      <button class="btn" onclick="openManualJadwalModal(null)" style="background:#fff!important;color:#7a5a1a!important;border-color:#7a5a1a!important;font-size:11px">&#43; Tambah Jadwal Manual</button>
+    </div>
+    <div class="cal-grid" id="cal-dow-row"></div>
+    <div class="cal-grid" id="cal-body" style="margin-top:3px"></div>
+  </div>
+
+  <!-- Stok ringkasan untuk referensi -->
+  <div class="tbl-wrap">
+    <div class="tbl-head"><span class="tbl-title">Estimasi Habis Per SKU</span></div>
+    <div class="tbl-scroll">
+      <table class="pj-stok-table">
+        <thead><tr>
+          <th>SKU</th>
+          <th style="text-align:right">Stok</th>
+          <th style="text-align:right">Avg/Hari</th>
+          <th style="text-align:center">Estimasi Habis</th>
+          <th style="text-align:center">Tgl Produksi</th>
+          <th style="text-align:center">Status Bahan</th>
+        </tr></thead>
+        <tbody id="jadwal-summary-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EVENT DETAIL MODAL ══ -->
+<div class="event-modal" id="event-modal">
+  <div class="event-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="event-box-title" id="event-modal-date" style="border:none;margin:0;padding:0"></div>
+      <button onclick="closeEventModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#999;padding:0 0 0 8px">&#10005;</button>
+    </div>
+    <div style="border-bottom:1px solid #e0e0e0;margin-bottom:12px;padding-bottom:8px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#7a5a1a">Jadwal Produksi</div>
+    <div id="event-modal-body"></div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e0e0e0">
+      <button class="btn btn-amber" onclick="goToKalkFromEvent()" style="width:100%;font-size:12px">&#8998; Hitung Kebutuhan Bahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BUFFER SETTING MODAL ══ -->
+<div id="buffer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:150;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:1.5rem;width:320px;max-width:90vw">
+    <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#1a6e8a;margin-bottom:12px;border-bottom:1px solid #e0e0e0;padding-bottom:8px">Setting SKU: <span id="buf-sku-name"></span></div>
+    <div class="field" style="margin-bottom:8px">
+      <label>Buffer Stock (pcs minimum)</label>
+      <input type="number" id="buf-buffer" min="0" placeholder="cth: 20" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Lead Time Produksi (hari)</label>
+      <input type="number" id="buf-leadtime" min="1" placeholder="cth: 3" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%">
+      <div style="font-size:10px;color:#999;margin-top:3px">Berapa hari sebelum habis kamu mau dapat reminder</div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Target Produksi per Batch (pcs)</label>
+      <input type="number" id="buf-batch" min="1" placeholder="cth: 100" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" style="flex:1;background:#fff!important;color:#1a6e8a!important;border-color:#1a6e8a!important" onclick="saveBufferSetting()">Simpan</button>
+      <button class="btn btn-ghost" onclick="closeBufferModal()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW: MASTER DATA ══ -->
+<div id="view-master" style="display:none">
+
+  <!-- Kategori selector -->
+  <div style="display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap">
+    <button class="btn" id="mcat-bb" onclick="setMasterKat('Bahan Baku')" style="background:#fff!important;color:#1a3a8a!important;border-color:#1a3a8a!important;font-size:11px">Bahan Baku</button>
+    <button class="btn" id="mcat-pj" onclick="setMasterKat('Produk Jadi')" style="font-size:11px">Produk Jadi</button>
+    <button class="btn" id="mcat-bk" onclick="setMasterKat('Bahan Kemas')" style="font-size:11px">Bahan Kemas</button>
+  </div>
+
+  <!-- Form tambah/edit -->
+  <div class="card" id="master-form-card">
+    <div class="form-title" id="master-form-title" style="color:#4a4a4a">&#43; Tambah Kode Bahan</div>
+    <div class="g2">
+      <div class="field"><label>Kode</label><input type="text" id="mf-kode" placeholder="cth: OB-08" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%"></div>
+      <div class="field"><label>Nama Item</label><input type="text" id="mf-nama" placeholder="cth: Argan Oil" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="master-save-btn" onclick="saveMasterItem()">&#43; Simpan</button>
+      <button class="btn btn-ghost" id="master-cancel-btn" onclick="cancelMasterEdit()" style="display:none">Batal Edit</button>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <span class="tbl-title" id="master-list-title">Daftar Bahan Baku</span>
+      <span style="font-size:10px;color:#999" id="master-list-count"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table class="tbl" style="table-layout:auto">
+        <thead><tr><th>Kode</th><th>Nama Item</th><th>Kategori</th><th></th></tr></thead>
+        <tbody id="master-list-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SKU Produk Jadi section -->
+  <div id="master-sku-section" style="display:none">
+    <div class="card" style="margin-top:0">
+      <div class="form-title" style="color:#1a6e8a">&#128666; SKU Produk Jadi (untuk modul Produk Jadi &amp; Jadwal)</div>
+      <div style="font-size:11px;color:#999;margin-bottom:10px">SKU di bawah ini digunakan untuk tracking stok produk jadi. Edit di tabel Produk Jadi di atas, lalu klik "Sync SKU ke Modul Produk Jadi".</div>
+      <button class="btn" onclick="syncSkuPj()" style="background:#fff!important;color:#1a6e8a!important;border-color:#1a6e8a!important;font-size:11px">&#8635; Sync SKU ke Modul Produk Jadi</button>
+      <div style="font-size:10px;color:#999;margin-top:6px" id="sku-sync-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MANUAL JADWAL MODAL ══ -->
+<div id="manual-jadwal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:150;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:1.5rem;width:360px;max-width:94vw;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#7a5a1a" id="mj-modal-title">Tambah Jadwal Produksi</div>
+      <button onclick="closeManualJadwalModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#999">&#10005;</button>
+    </div>
+    <input type="hidden" id="mj-edit-id">
+    <div class="field" style="margin-bottom:8px">
+      <label>Tanggal Produksi</label>
+      <input type="date" id="mj-tgl" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%">
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <label>SKU / Produk</label>
+      <select id="mj-sku" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%"></select>
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <label>Jumlah Target (pcs)</label>
+      <input type="number" id="mj-jml" min="1" placeholder="cth: 100" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="mj-cat" placeholder="cth: Batch bulan Juni" style="background:#fff!important;border:1px solid #ccc!important;border-radius:6px;padding:8px 10px;font-size:12px;color:#111!important;-webkit-text-fill-color:#111!important;outline:none;font-family:inherit;width:100%">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" style="flex:1;background:#fff!important;color:#7a5a1a!important;border-color:#7a5a1a!important" onclick="saveManualJadwal_entry()">Simpan</button>
+      <button class="btn btn-ghost" onclick="closeManualJadwalModal()">Batal</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -616,15 +897,18 @@ function setSync(v){
 function today(){return new Date().toISOString().slice(0,10)}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200)}
 function switchTab(tab){
-  ['in','out','stok','sum','log','resep','kalk'].forEach(function(t){
+  ['in','out','stok','sum','log','resep','kalk','pj','jadwal','master'].forEach(function(t){
     var v=document.getElementById('view-'+t);if(v)v.style.display=t===tab?'block':'none';
-    var ac={in:'t-in',out:'t-out',stok:'t-stok',sum:'t-sum',log:'t-log',resep:'t-resep',kalk:'t-kalk'};
+    var ac={in:'t-in',out:'t-out',stok:'t-stok',sum:'t-sum',log:'t-log',resep:'t-resep',kalk:'t-kalk',pj:'t-pj',jadwal:'t-jadwal',master:'t-master'};
     var btn=document.getElementById('tab-'+t);if(btn)btn.className='tab'+(t===tab?' '+ac[t]:'');
   });
   if(tab==='stok')renderStok();
   if(tab==='sum')renderSum();
   if(tab==='log'){renderLog();updateExportNamaList();}
   if(tab==='kalk')updateKalkProdukOpts();
+  if(tab==='pj'){renderPjStok();renderPjLog();}
+  if(tab==='jadwal'){renderJadwal();renderJadwalSummary();}
+  if(tab==='master'){renderMasterList();}
 }
 function getNames(kat){var s={};data.filter(function(e){return e.kat===kat}).forEach(function(e){s[e.nama]=1});return Object.keys(s).sort()}
 // Tangani pembacaan tanggal Excel (jika berbentuk ISO string dari sheets)
@@ -1161,6 +1445,669 @@ function gantiKode(){
   if(baru!==konfirm){err.textContent='Konfirmasi kode tidak cocok';err.style.display='block';return}
   localStorage.setItem(RESEP_KODE_KEY,baru);closeGantiKode();toast('Kode resep berhasil diubah ✓');
 }
+// ══════════════════════════════════════════════
+// PRODUK JADI & JADWAL PRODUKSI
+// ══════════════════════════════════════════════
+
+var SKU_PJ = [
+  {key:'PMD-OBL-37', nama:'Oilbased Pomade Light 37g'},
+  {key:'PMD-OBM-37', nama:'Oilbased Pomade Medium 37g'},
+  {key:'PMD-OBH-37', nama:'Oilbased Pomade Heavy 37g'},
+  {key:'PMD-OBL-75', nama:'Oilbased Pomade Light 75g'},
+  {key:'PMD-OBM-75', nama:'Oilbased Pomade Medium 75g'},
+  {key:'PMD-OBH-75', nama:'Oilbased Pomade Heavy 75g'},
+  {key:'PK',         nama:'Pomade Kids'},
+  {key:'PMD-WB',     nama:'Waterbased Pomade'},
+  {key:'SP-HC',      nama:'Hair Clay'},
+  {key:'HPP',        nama:'Parfum Rambut Pria'},
+  {key:'HPW',        nama:'Parfum Rambut Wanita'}
+];
+
+var SKU_COLORS = ['#1a7a3a','#1a6e8a','#7a1a7a','#a06000','#cc2200','#2a5a9a','#6a3a1a','#3a6a1a','#5a2a6a','#2a6a5a','#8a3a2a'];
+
+var PJ_KEY = 'beivz_pj_v1';
+var PJ_SETTINGS_KEY = 'beivz_pj_settings_v1';
+var pjData = []; // [{id, tgl, sku, jenis:'Masuk'|'Keluar', jml, cat}]
+var pjMode = 'masuk'; // 'masuk' | 'keluar'
+var bufEditSku = null;
+var calYear, calMonth;
+var pendingKalkSkus = [];
+
+function loadPjData(){
+  try{ pjData = JSON.parse(localStorage.getItem(PJ_KEY)||'[]'); }catch(e){ pjData=[]; }
+}
+function savePjData(){ localStorage.setItem(PJ_KEY, JSON.stringify(pjData)); }
+
+function getPjSettings(){
+  try{ return JSON.parse(localStorage.getItem(PJ_SETTINGS_KEY)||'{}'); }catch(e){ return {}; }
+}
+function savePjSettings(s){ localStorage.setItem(PJ_SETTINGS_KEY, JSON.stringify(s)); }
+
+function getPjSkuSetting(key){
+  var s = getPjSettings();
+  return s[key] || {buffer:10, leadtime:3, batch:100};
+}
+
+function getPjStok(key){
+  var m=0,k=0;
+  pjData.forEach(function(e){ if(e.sku===key){ if(e.jenis==='Masuk')m+=e.jml; else k+=e.jml; } });
+  return Math.max(0, m-k);
+}
+
+function getPjAvgPerHari(key){
+  // Use last 30 days of keluar data, min 3 days of data
+  var keluar = pjData.filter(function(e){ return e.sku===key && e.jenis==='Keluar'; });
+  if(!keluar.length) return 0;
+  var dates = keluar.map(function(e){ return e.tgl; });
+  dates.sort();
+  var firstDate = new Date(dates[0]);
+  var lastDate = new Date(dates[dates.length-1]);
+  var daySpan = Math.max(1, Math.round((lastDate - firstDate)/864e5) + 1);
+  var totalKeluar = keluar.reduce(function(s,e){ return s+e.jml; }, 0);
+  return +(totalKeluar / daySpan).toFixed(2);
+}
+
+function getPjSisaHari(key){
+  var stok = getPjStok(key);
+  var avg = getPjAvgPerHari(key);
+  var buf = getPjSkuSetting(key).buffer;
+  if(avg <= 0) return null; // no data yet
+  return Math.floor((stok - buf) / avg);
+}
+
+function getPjProduksiDate(key){
+  var sisa = getPjSisaHari(key);
+  if(sisa === null) return null;
+  var lead = getPjSkuSetting(key).leadtime;
+  var daysUntilProduksi = sisa - lead;
+  var d = new Date();
+  d.setDate(d.getDate() + Math.max(0, daysUntilProduksi));
+  return d;
+}
+
+// ── UI ──
+
+function initPjInputGrid(){
+  var grid = document.getElementById('pj-input-grid');
+  grid.innerHTML = SKU_PJ.map(function(sku){
+    return '<div class="pj-row"><label title="'+sku.nama+'">'+sku.nama+'</label><input type="number" min="0" placeholder="0" id="pj-in-'+sku.key+'" onchange="void(0)"></div>';
+  }).join('');
+  document.getElementById('pj-tgl').value = today();
+}
+
+function setPjMode(mode){
+  pjMode = mode;
+  var ml = document.getElementById('pj-mode-label');
+  var sb = document.getElementById('pj-save-btn');
+  var bm = document.getElementById('pj-btn-masuk');
+  var bk = document.getElementById('pj-btn-keluar');
+  if(mode==='masuk'){
+    ml.textContent = 'Mode: Produksi Selesai (stok masuk)';
+    sb.textContent = '+ Simpan Produksi Selesai';
+    sb.style.color='#1a6e8a'; sb.style.borderColor='#1a6e8a';
+    bm.style.fontWeight='600'; bk.style.fontWeight='400';
+  } else {
+    ml.textContent = 'Mode: Packing Keluar (stok berkurang)';
+    sb.textContent = '− Simpan Packing Keluar';
+    sb.style.color='#cc2200'; sb.style.borderColor='#cc2200';
+    bk.style.fontWeight='600'; bm.style.fontWeight='400';
+  }
+}
+
+function resetPjInputs(){
+  SKU_PJ.forEach(function(sku){ var el=document.getElementById('pj-in-'+sku.key); if(el)el.value=''; });
+  document.getElementById('pj-tgl').value = today();
+}
+
+function savePjBatch(){
+  var tgl = document.getElementById('pj-tgl').value || today();
+  var saved = 0;
+  SKU_PJ.forEach(function(sku){
+    var el = document.getElementById('pj-in-'+sku.key);
+    var jml = parseInt(el.value)||0;
+    if(jml>0){
+      pjData.unshift({id:Date.now()+Math.random(), tgl:tgl, sku:sku.key, nama:sku.nama, jenis:pjMode==='masuk'?'Masuk':'Keluar', jml:jml, cat:''});
+      saved++;
+    }
+  });
+  if(!saved){ toast('Isi minimal 1 SKU dulu'); return; }
+  savePjData();
+  resetPjInputs();
+  renderPjStok();
+  renderPjLog();
+  renderJadwal();
+  renderJadwalSummary();
+  toast(saved+' SKU tersimpan ✓');
+}
+
+function renderPjStok(){
+  var tbody = document.getElementById('pj-stok-body');
+  if(!tbody) return;
+  var rows = SKU_PJ.map(function(sku, i){
+    var stok = getPjStok(sku.key);
+    var avg = getPjAvgPerHari(sku.key);
+    var sisa = getPjSisaHari(sku.key);
+    var buf = getPjSkuSetting(sku.key).buffer;
+    var sisaLabel, sisaCls;
+    if(sisa===null){ sisaLabel='<span class="hari-badge hari-none">Belum ada data</span>'; }
+    else if(sisa<=0){ sisaLabel='<span class="hari-badge hari-low">HABIS / KRITIS</span>'; }
+    else if(sisa<=3){ sisaLabel='<span class="hari-badge hari-low">'+sisa+' hari</span>'; }
+    else if(sisa<=7){ sisaLabel='<span class="hari-badge hari-warn">'+sisa+' hari</span>'; }
+    else { sisaLabel='<span class="hari-badge hari-ok">'+sisa+' hari</span>'; }
+    var avgLabel = avg>0 ? avg+' pcs' : '<span style="color:#999">—</span>';
+    return '<tr><td><span style="color:'+SKU_COLORS[i]+';font-weight:500">'+sku.nama+'</span></td>'
+      +'<td style="text-align:right;font-weight:500">'+stok+' pcs</td>'
+      +'<td style="text-align:right;color:#999">'+buf+' pcs</td>'
+      +'<td style="text-align:right;color:#555">'+avgLabel+'</td>'
+      +'<td style="text-align:center">'+sisaLabel+'</td>'
+      +'<td style="text-align:center"><span style="font-size:10px;color:'+(stok>buf?'#1a7a3a':'#cc2200')+'">'+(stok>buf?'● Aman':'● Kritis')+'</span></td>'
+      +'<td style="text-align:center"><button onclick="openBufferModal(\''+sku.key+'\')" style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:11px;padding:2px 8px;color:#555;font-family:inherit">&#9881; Set</button></td></tr>';
+  }).join('');
+  tbody.innerHTML = rows;
+  var lastEntry = pjData[0];
+  var lu = document.getElementById('pj-last-update');
+  if(lu) lu.textContent = lastEntry ? 'Update terakhir: '+lastEntry.tgl : 'Belum ada data';
+}
+
+function renderPjLog(){
+  var tbody = document.getElementById('pj-log-body');
+  var cnt = document.getElementById('pj-log-count');
+  if(!tbody) return;
+  if(!pjData.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada data</td></tr>'; if(cnt)cnt.textContent='0 entri'; return; }
+  if(cnt) cnt.textContent = pjData.length+' entri';
+  tbody.innerHTML = pjData.slice(0,50).map(function(e){
+    var jBadge = e.jenis==='Masuk'
+      ? '<span class="badge b-in">+ Masuk</span>'
+      : '<span class="badge b-out">- Keluar</span>';
+    return '<tr><td>'+e.tgl+'</td><td style="color:#333">'+e.nama+'</td><td>'+jBadge+'</td>'
+      +'<td style="text-align:right;font-weight:500">'+e.jml+' pcs</td>'
+      +'<td style="color:#999">'+(e.cat||'—')+'</td>'
+      +'<td><button class="btn-del" onclick="deletePjEntry(\''+e.id+'\')">&#128465;</button></td></tr>';
+  }).join('');
+}
+
+function deletePjEntry(id){
+  if(!confirm('Hapus entri ini?')) return;
+  pjData = pjData.filter(function(e){ return String(e.id)!==String(id); });
+  savePjData();
+  renderPjStok(); renderPjLog(); renderJadwal(); renderJadwalSummary();
+  toast('Entri dihapus');
+}
+
+// ── BUFFER SETTING MODAL ──
+function openBufferModal(key){
+  bufEditSku = key;
+  var sku = SKU_PJ.find(function(s){ return s.key===key; });
+  var settings = getPjSkuSetting(key);
+  document.getElementById('buf-sku-name').textContent = sku ? sku.nama : key;
+  document.getElementById('buf-buffer').value = settings.buffer;
+  document.getElementById('buf-leadtime').value = settings.leadtime;
+  document.getElementById('buf-batch').value = settings.batch;
+  document.getElementById('buffer-modal').style.display = 'flex';
+}
+function closeBufferModal(){ document.getElementById('buffer-modal').style.display='none'; bufEditSku=null; }
+function saveBufferSetting(){
+  if(!bufEditSku) return;
+  var s = getPjSettings();
+  s[bufEditSku] = {
+    buffer: parseInt(document.getElementById('buf-buffer').value)||0,
+    leadtime: parseInt(document.getElementById('buf-leadtime').value)||3,
+    batch: parseInt(document.getElementById('buf-batch').value)||100
+  };
+  savePjSettings(s);
+  closeBufferModal();
+  renderPjStok(); renderJadwal(); renderJadwalSummary();
+  toast('Setting tersimpan ✓');
+}
+
+// ── CALENDAR ──
+function initCal(){
+  var now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+}
+
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderJadwal(); renderJadwalSummary(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderJadwal(); renderJadwalSummary(); }
+
+function getCalEvents(){
+  // Returns map: 'YYYY-MM-DD' -> [{sku, nama, sisaHari, status, manual, id, jml, cat}]
+  var events = {};
+  // Auto events from stok
+  SKU_PJ.forEach(function(sku){
+    var prodDate = getPjProduksiDate(sku.key);
+    if(!prodDate) return;
+    var sisa = getPjSisaHari(sku.key);
+    var key = prodDate.toISOString().slice(0,10);
+    if(!events[key]) events[key] = [];
+    var status = sisa<=0?'critical':sisa<=3?'critical':sisa<=7?'warn':'ok';
+    events[key].push({sku:sku.key, nama:sku.nama, sisaHari:sisa, status:status, batch:getPjSkuSetting(sku.key).batch, manual:false});
+  });
+  // Manual events
+  manualJadwal.forEach(function(e){
+    if(!events[e.tgl]) events[e.tgl]=[];
+    events[e.tgl].push({sku:e.sku, nama:e.nama, sisaHari:null, status:'manual', batch:e.jml, jml:e.jml, cat:e.cat, manual:true, id:e.id});
+  });
+  return events;
+}
+
+function renderJadwal(){
+  if(!document.getElementById('cal-body')) return;
+  if(calYear===undefined) initCal();
+
+  var MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  var DAYS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+  document.getElementById('cal-title').textContent = MONTHS[calMonth]+' '+calYear;
+
+  // DOW headers
+  document.getElementById('cal-dow-row').innerHTML = DAYS.map(function(d){
+    return '<div class="cal-dow">'+d+'</div>';
+  }).join('');
+
+  var events = getCalEvents();
+  var firstDay = new Date(calYear, calMonth, 1).getDay();
+  var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  var daysInPrev = new Date(calYear, calMonth, 0).getDate();
+  var todayStr = today();
+
+  var cells = '';
+  var total = Math.ceil((firstDay + daysInMonth)/7)*7;
+
+  for(var i=0; i<total; i++){
+    var dayNum, dateStr, isOther=false;
+    if(i<firstDay){ dayNum=daysInPrev-firstDay+i+1; isOther=true; dateStr=new Date(calYear,calMonth-1,dayNum).toISOString().slice(0,10); }
+    else if(i>=firstDay+daysInMonth){ dayNum=i-firstDay-daysInMonth+1; isOther=true; dateStr=new Date(calYear,calMonth+1,dayNum).toISOString().slice(0,10); }
+    else{ dayNum=i-firstDay+1; dateStr=new Date(calYear,calMonth,dayNum).toISOString().slice(0,10); }
+
+    var ev = events[dateStr]||[];
+    var isToday = dateStr===todayStr;
+    var cls = 'cal-day'+(isOther?' other-month':'')+(isToday?' today':'')+(ev.length?' has-event':'');
+    var dots = ev.map(function(e,idx){
+      var col = e.status==='manual'?'#1a3a8a':e.status==='critical'?'#cc2200':e.status==='warn'?'#a06000':'#1a7a3a';
+      return '<div class="cal-dot" style="background:'+col+'" title="'+e.nama+'"></div>';
+    }).join('');
+
+    var onclick = ev.length ? 'onclick="openEventModal(\''+dateStr+'\')"' : '';
+    cells += '<div class="'+cls+'" '+onclick+'><div class="cal-day-num">'+dayNum+'</div><div class="cal-dots">'+dots+'</div></div>';
+  }
+  document.getElementById('cal-body').innerHTML = cells;
+}
+
+function openEventModal(dateStr){
+  var events = getCalEvents();
+  var ev = events[dateStr]||[];
+  if(!ev.length) return;
+  document.getElementById('event-modal-date').textContent = dateStr;
+  pendingKalkSkus = ev.filter(function(e){return!e.manual}).map(function(e){ return {key:e.sku, batch:e.batch}; });
+  if(!pendingKalkSkus.length) pendingKalkSkus = ev.map(function(e){ return {key:e.sku, batch:e.batch}; });
+
+  var html = ev.map(function(e){
+    var stok = getPjStok(e.sku);
+    var statusCol = e.status==='manual'?'#1a3a8a':e.status==='critical'?'#cc2200':e.status==='warn'?'#a06000':'#1a7a3a';
+    var resep = resepData.find(function(r){ return r.key===e.sku; });
+    var bahanStatus = '<span style="color:#999;font-size:10px">Resep belum diset</span>';
+    if(resep){
+      var allOk = true;
+      resep.bahan.forEach(function(b){
+        var ada = getSisa(b.nama, b.sat);
+        var butuh = +(b.jml * e.batch).toFixed(4);
+        if(ada < butuh) allOk = false;
+      });
+      bahanStatus = allOk
+        ? '<span style="color:#1a7a3a;font-size:10px;font-weight:500">✓ Bahan cukup</span>'
+        : '<span style="color:#cc2200;font-size:10px;font-weight:500">✗ Bahan kurang</span>';
+    }
+    var manualBadge = e.manual ? '<span style="background:#f0f4ff;border:1px solid #1a3a8a;color:#1a3a8a;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px">MANUAL</span>' : '';
+    var editBtns = e.manual
+      ? '<div style="display:flex;gap:4px;margin-top:4px">'
+          +'<button onclick="openManualJadwalModal(\''+e.id+'\')" style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:10px;padding:2px 7px;color:#555;font-family:inherit">Edit</button>'
+          +'<button onclick="deleteManualJadwal(\''+e.id+'\')" style="background:none;border:1px solid #f5c6c6;border-radius:4px;cursor:pointer;font-size:10px;padding:2px 7px;color:#cc2200;font-family:inherit">Hapus</button>'
+        +'</div>'
+      : '';
+    var sisaLabel = e.manual ? 'Target: '+e.jml+' pcs'+(e.cat?' · '+e.cat:'') : 'Sisa stok: '+stok+' pcs · Produksi: '+e.batch+' pcs · '+bahanStatus;
+    return '<div class="event-sku-row"><div style="flex:1"><div class="event-sku-name" style="color:'+statusCol+'">'+e.nama+manualBadge+'</div>'
+      +'<div class="event-sku-sub">'+sisaLabel+'</div>'
+      +editBtns+'</div>'
+      +'<span style="font-size:10px;color:'+statusCol+';font-weight:500;margin-left:8px">'+(e.manual?'Manual':(e.sisaHari<=0?'KRITIS':e.sisaHari+' hari lagi'))+'</span></div>';
+  }).join('');
+
+  document.getElementById('event-modal-body').innerHTML = html;
+  document.getElementById('event-modal').classList.add('open');
+}
+
+function closeEventModal(){ document.getElementById('event-modal').classList.remove('open'); }
+
+function goToKalkFromEvent(){
+  closeEventModal();
+  // Pre-fill kalkulator with pending SKUs
+  openKalkModal();
+  setTimeout(function(){
+    if(typeof updateKalkProdukOpts === 'function') updateKalkProdukOpts();
+    // Reset and add rows for each pending SKU
+    if(typeof resetKalk === 'function') resetKalk();
+    pendingKalkSkus.forEach(function(item, idx){
+      if(idx>0 && typeof addKalkRow === 'function') addKalkRow();
+      setTimeout(function(){
+        var rows = document.getElementById('kalk-produk-list');
+        if(!rows) return;
+        var allRows = rows.querySelectorAll('.kalk-p-row');
+        var row = allRows[idx];
+        if(!row) return;
+        var sel = row.querySelector('select');
+        var inp = row.querySelector('input');
+        if(sel){ sel.value = item.key; }
+        if(inp){ inp.value = item.batch; }
+        document.getElementById('kalk-batch-size').value = item.batch;
+      }, 50*(idx+1));
+    });
+  }, 200);
+}
+
+function renderJadwalSummary(){
+  var tbody = document.getElementById('jadwal-summary-body');
+  if(!tbody) return;
+  tbody.innerHTML = SKU_PJ.map(function(sku, i){
+    var stok = getPjStok(sku.key);
+    var avg = getPjAvgPerHari(sku.key);
+    var sisa = getPjSisaHari(sku.key);
+    var prodDate = getPjProduksiDate(sku.key);
+
+    var avgLabel = avg>0 ? avg+' pcs' : '<span style="color:#999">—</span>';
+    var hariLabel, tglLabel;
+    if(sisa===null){
+      hariLabel = '<span style="color:#999;font-size:11px">Butuh data 7 hari</span>';
+      tglLabel = '<span style="color:#999">—</span>';
+    } else if(sisa<=0){
+      hariLabel = '<span style="color:#cc2200;font-weight:500">HABIS</span>';
+      tglLabel = '<span style="color:#cc2200;font-weight:500">Sekarang!</span>';
+    } else {
+      hariLabel = '<span style="color:'+(sisa<=3?'#cc2200':sisa<=7?'#a06000':'#1a7a3a')+';font-weight:500">'+sisa+' hari</span>';
+      tglLabel = '<span style="color:'+(sisa<=3?'#cc2200':sisa<=7?'#a06000':'#1a7a3a')+'">'+prodDate.toISOString().slice(0,10)+'</span>';
+    }
+
+    // Bahan baku status
+    var resep = resepData.find(function(r){ return r.key===sku.key; });
+    var bahanLabel = '<span style="color:#999;font-size:11px">—</span>';
+    if(resep){
+      var bat = getPjSkuSetting(sku.key).batch;
+      var allOk2 = true;
+      resep.bahan.forEach(function(b){
+        if(getSisa(b.nama,b.sat) < +(b.jml*bat).toFixed(4)) allOk2=false;
+      });
+      bahanLabel = allOk2
+        ? '<span style="color:#1a7a3a;font-size:11px;font-weight:500">✓ Cukup</span>'
+        : '<span style="color:#cc2200;font-size:11px;font-weight:500">✗ Kurang</span>';
+    }
+
+    return '<tr><td><span style="color:'+SKU_COLORS[i]+';font-weight:500">'+sku.nama+'</span></td>'
+      +'<td style="text-align:right">'+stok+' pcs</td>'
+      +'<td style="text-align:right">'+avgLabel+'</td>'
+      +'<td style="text-align:center">'+hariLabel+'</td>'
+      +'<td style="text-align:center">'+tglLabel+'</td>'
+      +'<td style="text-align:center">'+bahanLabel+'</td></tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// MASTER DATA — KODE BAHAN (localStorage CRUD)
+// ══════════════════════════════════════════════
+
+var MASTER_KEY = 'beivz_master_v1';
+var masterKat = 'Bahan Baku';
+var masterEditKode = null; // kode being edited
+
+var KODE_BAHAN_DEFAULT = {
+  'Bahan Baku':[
+    {kode:'OB-01',nama:'Beeswax'},{kode:'OB-02',nama:'Canola Oil'},{kode:'OB-03',nama:'Vaseline'},
+    {kode:'OB-04',nama:'Vitamin E'},{kode:'OB-05',nama:'Shea Butter'},{kode:'OB-06',nama:'Coconut Oil'},
+    {kode:'OB-07',nama:'Fragrance (OB)'},{kode:'WB-01',nama:'Aqua / Purified Water'},
+    {kode:'WB-02',nama:'Ceteareth-25'},{kode:'WB-03',nama:'Glycerin'},{kode:'WB-04',nama:'Fragrance (WB)'},
+    {kode:'WB-05',nama:'Propylene Glycol'},{kode:'WB-06',nama:'PEG-40 Hydrogenated Castor Oil'},
+    {kode:'WB-07',nama:'PEG-7 Glyceryl Cocoate'},{kode:'WB-08',nama:'Phenoxyethanol'},
+    {kode:'WB-09',nama:'Polysorbate 20'},{kode:'WB-10',nama:'Simethicone'},{kode:'HC-01',nama:'Bentonite'},
+    {kode:'HP-02',nama:'Ethanol / Alcohol Denat.'},{kode:'HP-03',nama:'PEG-40 HCO'},
+    {kode:'HP-04',nama:'Fragrance (HP)'},{kode:'HP-06',nama:'Fragrance (HPW)'}
+  ],
+  'Produk Jadi':[
+    {kode:'PMD-OBL-37',nama:'Oilbased Pomade Light 37g'},{kode:'PMD-OBM-37',nama:'Oilbased Pomade Medium 37g'},
+    {kode:'PMD-OBH-37',nama:'Oilbased Pomade Heavy 37g'},{kode:'PMD-OBL-75',nama:'Oilbased Pomade Light 75g'},
+    {kode:'PMD-OBM-75',nama:'Oilbased Pomade Medium 75g'},{kode:'PMD-OBH-75',nama:'Oilbased Pomade Heavy 75g'},
+    {kode:'PK',nama:'Pomade Kids'},{kode:'HPP',nama:'Parfum Rambut Pria'},
+    {kode:'HPW',nama:'Parfum Rambut Wanita'},{kode:'PMD-WB',nama:'Waterbased Pomade'},
+    {kode:'SP-HC',nama:'Hair Clay'}
+  ],
+  'Bahan Kemas':[
+    {kode:'ALU50',nama:'Pot Alumunium 50 gram'},{kode:'ALU100',nama:'Pot Alumunium 100 gram'},
+    {kode:'PET50',nama:'PET 50 gram'},{kode:'POT27',nama:'Pot Plastik 27 gram'},
+    {kode:'POT37',nama:'Pot Plastik 37 gram'},{kode:'KACA50',nama:'Pot Kaca Amber 50 gram'},
+    {kode:'BOT60-H',nama:'Botol Spray Hitam 60 ml'},{kode:'BOT60-P',nama:'Botol Spray Putih 60 ml'}
+  ]
+};
+
+function getMasterData(){
+  try{
+    var d = JSON.parse(localStorage.getItem(MASTER_KEY)||'null');
+    if(!d){ d = JSON.parse(JSON.stringify(KODE_BAHAN_DEFAULT)); localStorage.setItem(MASTER_KEY,JSON.stringify(d)); }
+    return d;
+  }catch(e){ return JSON.parse(JSON.stringify(KODE_BAHAN_DEFAULT)); }
+}
+function saveMasterData(d){ localStorage.setItem(MASTER_KEY,JSON.stringify(d)); rebuildBahanList(); }
+
+function rebuildBahanList(){
+  var d = getMasterData();
+  KODE_BAHAN = d;
+  var a=[];
+  Object.values(d).forEach(function(list){list.forEach(function(b){if(!a.includes(b.nama))a.push(b.nama)})});
+  BAHAN_LIST = a.sort();
+  updateInNamaList(); updateInKodeList(); updateOutNamaList();
+}
+
+function setMasterKat(kat){
+  masterKat = kat;
+  cancelMasterEdit();
+  ['bb','pj','bk'].forEach(function(k){
+    var map={'bb':'Bahan Baku','pj':'Produk Jadi','bk':'Bahan Kemas'};
+    var btn = document.getElementById('mcat-'+k);
+    if(!btn) return;
+    var active = map[k]===kat;
+    btn.style.fontWeight = active?'600':'400';
+    btn.style.color = active?'#111':'#555';
+    btn.style.borderColor = active?'#111':'#ccc';
+  });
+  var skuSec = document.getElementById('master-sku-section');
+  if(skuSec) skuSec.style.display = kat==='Produk Jadi'?'block':'none';
+  renderMasterList();
+}
+
+function renderMasterList(){
+  var d = getMasterData();
+  var list = d[masterKat]||[];
+  var tbody = document.getElementById('master-list-body');
+  var cnt = document.getElementById('master-list-count');
+  var title = document.getElementById('master-list-title');
+  if(title) title.textContent = 'Daftar '+masterKat;
+  if(cnt) cnt.textContent = list.length+' item';
+  if(!tbody) return;
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">Belum ada item</td></tr>'; return; }
+  tbody.innerHTML = list.map(function(item){
+    return '<tr>'
+      +'<td><span style="font-family:monospace;font-size:11px;color:#1a3a8a">'+item.kode+'</span></td>'
+      +'<td>'+item.nama+'</td>'
+      +'<td><span style="font-size:10px;color:#999">'+masterKat+'</span></td>'
+      +'<td style="white-space:nowrap">'
+        +'<button style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:11px;padding:2px 8px;color:#555;font-family:inherit;margin-right:4px" onclick="editMasterItem(\''+item.kode.replace(/'/g,"\\'")+'\')" >Edit</button>'
+        +'<button class="btn-del" onclick="deleteMasterItem(\''+item.kode.replace(/'/g,"\\'")+'\')">&#128465;</button>'
+      +'</td></tr>';
+  }).join('');
+}
+
+function saveMasterItem(){
+  var kode = document.getElementById('mf-kode').value.trim().toUpperCase();
+  var nama = document.getElementById('mf-nama').value.trim();
+  if(!kode){toast('Kode tidak boleh kosong');return}
+  if(!nama){toast('Nama tidak boleh kosong');return}
+  var d = getMasterData();
+  if(!d[masterKat]) d[masterKat]=[];
+  if(masterEditKode){
+    // editing existing
+    var idx = d[masterKat].findIndex(function(x){return x.kode===masterEditKode});
+    if(idx>=0){ d[masterKat][idx]={kode:kode,nama:nama}; }
+    else { d[masterKat].push({kode:kode,nama:nama}); }
+    toast('Item diperbarui ✓');
+  } else {
+    // check duplicate kode
+    var exists = d[masterKat].find(function(x){return x.kode===kode});
+    if(exists){toast('Kode sudah ada, gunakan Edit');return}
+    d[masterKat].push({kode:kode,nama:nama});
+    toast('Item ditambahkan ✓');
+  }
+  saveMasterData(d);
+  cancelMasterEdit();
+  renderMasterList();
+}
+
+function editMasterItem(kode){
+  var d = getMasterData();
+  var item = (d[masterKat]||[]).find(function(x){return x.kode===kode});
+  if(!item) return;
+  masterEditKode = kode;
+  document.getElementById('mf-kode').value = item.kode;
+  document.getElementById('mf-nama').value = item.nama;
+  var title = document.getElementById('master-form-title');
+  if(title) title.textContent = 'Edit: '+item.kode;
+  var saveBtn = document.getElementById('master-save-btn');
+  if(saveBtn){ saveBtn.textContent='✓ Simpan Perubahan'; saveBtn.style.color='#1a7a3a'; saveBtn.style.borderColor='#1a7a3a'; }
+  var cancelBtn = document.getElementById('master-cancel-btn');
+  if(cancelBtn) cancelBtn.style.display='inline-block';
+  document.getElementById('mf-kode').focus();
+}
+
+function cancelMasterEdit(){
+  masterEditKode = null;
+  document.getElementById('mf-kode').value='';
+  document.getElementById('mf-nama').value='';
+  var title = document.getElementById('master-form-title');
+  if(title) title.textContent='+ Tambah Kode Bahan';
+  var saveBtn = document.getElementById('master-save-btn');
+  if(saveBtn){ saveBtn.textContent='+ Simpan'; saveBtn.style.color=''; saveBtn.style.borderColor=''; }
+  var cancelBtn = document.getElementById('master-cancel-btn');
+  if(cancelBtn) cancelBtn.style.display='none';
+}
+
+function deleteMasterItem(kode){
+  if(!confirm('Hapus kode "'+kode+'"? Pastikan kode ini tidak sedang dipakai di resep.')) return;
+  var d = getMasterData();
+  d[masterKat] = (d[masterKat]||[]).filter(function(x){return x.kode!==kode});
+  saveMasterData(d);
+  renderMasterList();
+  toast('Kode dihapus ✓');
+}
+
+function syncSkuPj(){
+  var d = getMasterData();
+  var pjList = d['Produk Jadi']||[];
+  // rebuild SKU_PJ from master Produk Jadi
+  SKU_PJ = pjList.map(function(item){ return {key:item.kode, nama:item.nama}; });
+  // extend colors if needed
+  while(SKU_COLORS.length < SKU_PJ.length){
+    SKU_COLORS.push('#'+(Math.floor(Math.random()*0x888888)+0x333333).toString(16).padStart(6,'0'));
+  }
+  initPjInputGrid();
+  renderPjStok();
+  var el = document.getElementById('sku-sync-status');
+  if(el) el.textContent = 'Sync berhasil — '+SKU_PJ.length+' SKU dimuat ('+new Date().toLocaleTimeString('id-ID')+')';
+  toast('SKU Produk Jadi diperbarui ✓');
+}
+
+// ══════════════════════════════════════════════
+// MANUAL JADWAL PRODUKSI
+// ══════════════════════════════════════════════
+
+var MANUAL_JADWAL_KEY = 'beivz_manual_jadwal_v1';
+var manualJadwal = []; // [{id, tgl, sku, nama, jml, cat}]
+
+function loadManualJadwal(){
+  try{ manualJadwal = JSON.parse(localStorage.getItem(MANUAL_JADWAL_KEY)||'[]'); }catch(e){ manualJadwal=[]; }
+}
+function saveManualJadwal(){ localStorage.setItem(MANUAL_JADWAL_KEY, JSON.stringify(manualJadwal)); }
+
+function openManualJadwalModal(editId){
+  var modal = document.getElementById('manual-jadwal-modal');
+  var title = document.getElementById('mj-modal-title');
+  document.getElementById('mj-edit-id').value = editId||'';
+  document.getElementById('mj-tgl').value = today();
+  document.getElementById('mj-jml').value = '';
+  document.getElementById('mj-cat').value = '';
+  // populate SKU select
+  var sel = document.getElementById('mj-sku');
+  sel.innerHTML = SKU_PJ.map(function(s){ return '<option value="'+s.key+'">'+s.nama+'</option>'; }).join('');
+  if(editId){
+    var entry = manualJadwal.find(function(e){ return String(e.id)===String(editId); });
+    if(entry){
+      title.textContent = 'Edit Jadwal Manual';
+      document.getElementById('mj-tgl').value = entry.tgl;
+      sel.value = entry.sku;
+      document.getElementById('mj-jml').value = entry.jml;
+      document.getElementById('mj-cat').value = entry.cat||'';
+    }
+  } else {
+    title.textContent = 'Tambah Jadwal Manual';
+  }
+  modal.style.display='flex';
+}
+
+function closeManualJadwalModal(){
+  document.getElementById('manual-jadwal-modal').style.display='none';
+}
+
+function saveManualJadwal_entry(){
+  var editId = document.getElementById('mj-edit-id').value;
+  var tgl = document.getElementById('mj-tgl').value;
+  var sku = document.getElementById('mj-sku').value;
+  var jml = parseInt(document.getElementById('mj-jml').value)||0;
+  var cat = document.getElementById('mj-cat').value.trim();
+  if(!tgl){toast('Pilih tanggal dulu');return}
+  if(!sku){toast('Pilih SKU dulu');return}
+  if(jml<=0){toast('Jumlah harus lebih dari 0');return}
+  var skuObj = SKU_PJ.find(function(s){ return s.key===sku; });
+  var entry = {id: editId||String(Date.now()), tgl:tgl, sku:sku, nama:skuObj?skuObj.nama:sku, jml:jml, cat:cat, manual:true};
+  if(editId){
+    var idx = manualJadwal.findIndex(function(e){ return String(e.id)===editId; });
+    if(idx>=0) manualJadwal[idx]=entry; else manualJadwal.push(entry);
+    toast('Jadwal diperbarui ✓');
+  } else {
+    manualJadwal.push(entry);
+    toast('Jadwal manual ditambahkan ✓');
+  }
+  saveManualJadwal();
+  closeManualJadwalModal();
+  renderJadwal();
+  renderJadwalSummary();
+}
+
+function deleteManualJadwal(id){
+  if(!confirm('Hapus jadwal manual ini?')) return;
+  manualJadwal = manualJadwal.filter(function(e){ return String(e.id)!==String(id); });
+  saveManualJadwal();
+  renderJadwal();
+  renderJadwalSummary();
+  closeEventModal();
+  toast('Jadwal dihapus');
+}
+
+// ── override saveManualJadwal function name conflict ──
+// (the save button calls saveManualJadwal_entry)
+
+// ── init
+loadPjData();
+loadManualJadwal();
+initCal();
+rebuildBahanList();
+initPjInputGrid();
+setPjMode('masuk');
+setMasterKat('Bahan Baku');
+
 var _origSwitchTab=switchTab;
 switchTab=function(tab){if(tab!=='resep')resepUnlocked=false;if(tab!=='kalk')kalkUnlocked=false;_origSwitchTab(tab);};
 
