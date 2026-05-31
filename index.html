@@ -192,6 +192,26 @@ input{-webkit-text-fill-color:#111!important}
 .cal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .cal-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#555}
 .cal-legend-dot{width:8px;height:8px;border-radius:50%}
+/* ── LOT BREAKDOWN / FIFO ── */
+.lot-expand-btn{background:none!important;border:1px solid #ccc!important;border-radius:4px;cursor:pointer;font-size:11px;padding:2px 7px;color:#555!important;font-family:inherit;white-space:nowrap;transition:all .15s}
+.lot-expand-btn:hover{border-color:var(--blue)!important;color:var(--blue)!important}
+.lot-expand-btn.active{border-color:var(--blue)!important;color:var(--blue)!important;background:#f0f4ff!important}
+.lot-breakdown-row{background:#f7f9ff!important}
+.lot-breakdown-row td{padding:0!important;border-bottom:1px solid #e0e0e0!important}
+.lot-breakdown-inner{padding:8px 14px 10px 60px}
+.lot-bd-title{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:6px}
+.lot-bd-table{width:100%;border-collapse:collapse}
+.lot-bd-table th{font-size:9px;letter-spacing:0.07em;text-transform:uppercase;color:#aaa;padding:3px 8px;text-align:left;font-weight:400;border-bottom:1px solid #eee}
+.lot-bd-table td{font-size:11px;padding:4px 8px;border-bottom:1px solid #f5f5f5;color:#333}
+.lot-bd-table tr:last-child td{border-bottom:none}
+.lot-age-old{color:var(--amber);font-weight:500}
+.lot-age-new{color:#999}
+/* FIFO result toast / panel */
+.fifo-panel{background:#f0f7ff;border:1px solid #b3d0f5;border-radius:var(--radius);padding:10px 12px;margin-top:8px;font-size:11px;line-height:1.7;display:none}
+.fifo-panel.show{display:block}
+.fifo-panel-title{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#1a3a8a;margin-bottom:4px;font-weight:500}
+.fifo-lot-line{color:#333}.fifo-lot-line b{color:#1a3a8a}
+.fifo-warn{color:var(--red);font-weight:500}
 </style>
 </head>
 <body>
@@ -301,18 +321,20 @@ input{-webkit-text-fill-color:#111!important}
     </div>
     <div class="g2">
       <div class="field"><label>Nama item</label>
-        <input type="text" id="out-nama" list="dl-out-nama" placeholder="Pilih nama item..." oninput="updateOutSisa();updateOutLotList()">
+        <input type="text" id="out-nama" list="dl-out-nama" placeholder="Pilih nama item..." oninput="updateOutSisa();updateOutLotList();updateOutLotInfo()">
         <datalist id="dl-out-nama"></datalist>
+        <div id="out-lot-info" style="margin-top:5px;display:none"></div>
       </div>
       <div class="field"><label>No. Lot bahan</label>
-        <input type="text" id="out-lot" list="dl-out-lot" placeholder="Pilih lot bahan..." oninput="updateOutSisa()">
+        <input type="text" id="out-lot" list="dl-out-lot" placeholder="Kosongkan = FIFO otomatis..." oninput="updateOutSisa()">
         <datalist id="dl-out-lot"></datalist>
+        <div style="font-size:10px;color:#999;margin-top:3px">Kosongkan untuk biarkan FIFO otomatis pilihkan lot</div>
       </div>
     </div>
     <div class="g3">
       <div class="field"><label>Jumlah</label><input type="number" id="out-jml" placeholder="0" min="0" step="any" oninput="updateOutSisa()"></div>
       <div class="field"><label>Satuan</label>
-        <select id="out-satuan" onchange="updateOutSisa()">
+        <select id="out-satuan" onchange="updateOutSisa();updateOutLotInfo()">
           <option>gram</option><option>kg</option><option>ml</option><option>liter</option>
           <option>pcs</option><option>lusin</option><option>box</option><option>roll</option><option>lembar</option>
         </select>
@@ -324,6 +346,11 @@ input{-webkit-text-fill-color:#111!important}
     <div class="g2">
       <div class="field"><label>No. Batch peruntukan produksi</label><input type="text" id="out-batch" placeholder="mis. BTC-MAY-001"></div>
       <div class="field"><label>Catatan (opsional)</label><input type="text" id="out-cat" placeholder="Keterangan tambahan..."></div>
+    </div>
+    <!-- FIFO Preview Panel -->
+    <div class="fifo-panel" id="fifo-panel">
+      <div class="fifo-panel-title">&#9997; FIFO — Rencana Pengambilan Lot</div>
+      <div id="fifo-panel-body"></div>
     </div>
     <div class="btn-row">
       <button class="btn btn-out" id="btn-save-out" onclick="addKeluar()">&#8722; Simpan Keluar</button>
@@ -350,8 +377,8 @@ input{-webkit-text-fill-color:#111!important}
     </div>
     <div class="tbl-scroll">
       <table class="tbl" style="min-width:680px">
-        <colgroup><col class="stok-cb-col" style="width:0;overflow:hidden"><col style="width:55px"><col style="width:145px"><col style="width:75px"><col style="width:75px"><col style="width:80px"><col style="width:55px"><col style="width:100px"><col style="width:70px"><col style="width:34px"><col style="width:34px"></colgroup>
-        <thead><tr><th class="stok-cb-col" style="padding:0;overflow:hidden"><input type="checkbox" id="stok-check-all" onchange="toggleAllStok(this.checked)" style="cursor:pointer;display:none"></th><th>Kat.</th><th>Nama item</th><th>Total masuk</th><th>Total keluar</th><th>Sisa stok</th><th>Satuan</th><th>Exp terdekat</th><th>Status</th><th></th><th></th></tr></thead>
+        <colgroup><col class="stok-cb-col" style="width:0;overflow:hidden"><col style="width:55px"><col style="width:130px"><col style="width:75px"><col style="width:75px"><col style="width:75px"><col style="width:50px"><col style="width:90px"><col style="width:65px"><col style="width:60px"><col style="width:34px"><col style="width:34px"></colgroup>
+        <thead><tr><th class="stok-cb-col" style="padding:0;overflow:hidden"><input type="checkbox" id="stok-check-all" onchange="toggleAllStok(this.checked)" style="cursor:pointer;display:none"></th><th>Kat.</th><th>Nama item</th><th>Total masuk</th><th>Total keluar</th><th>Sisa stok</th><th>Satuan</th><th>Exp terdekat</th><th>Status</th><th>Lot</th><th></th><th></th></tr></thead>
         <tbody id="stok-body"></tbody>
       </table>
     </div>
@@ -436,7 +463,7 @@ input{-webkit-text-fill-color:#111!important}
 
 <div id="view-kalk" style="display:none">
   <div class="card">
-    <div class="form-title kalk">&#8998; hitung kebutuhan produksi</div>
+    <div class="form-title kalk" style="display:flex;justify-content:space-between;align-items:center"><span>&#8998; hitung kebutuhan produksi</span><button class="btn-sm btn-sm-gray" onclick="openGantiKodeKalk()" style="font-size:10px;letter-spacing:0.05em">&#128273; Ganti Kode</button></div>
     <div class="field" style="margin-bottom:14px;max-width:280px">
       <label>Besar Batch (total pcs per batch)</label>
       <input type="number" id="kalk-batch-size" placeholder="cth: 500" min="1" step="1" style="font-size:14px">
@@ -773,6 +800,18 @@ input{-webkit-text-fill-color:#111!important}
   </div>
 </div>
 
+<div id="ganti-kode-kalk-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:100;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:1.5rem;width:320px;max-width:90vw">
+    <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;border-bottom:1px solid #e0e0e0;padding-bottom:8px">Ganti Kode Kalkulator</div>
+    <div class="field" style="margin-bottom:8px"><label>Kode lama</label><input type="password" id="gkk-lama" placeholder="••••" autocomplete="off"></div>
+    <div class="field" style="margin-bottom:8px"><label>Kode baru</label><input type="password" id="gkk-baru" placeholder="••••" autocomplete="off"></div>
+    <div class="field" style="margin-bottom:12px"><label>Konfirmasi kode baru</label><input type="password" id="gkk-konfirm" placeholder="••••" autocomplete="off"></div>
+    <div id="gkk-err" style="color:var(--red);font-size:11px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-amber" style="flex:1" onclick="gantiKodeKalk()">Simpan</button>
+      <button class="btn btn-ghost" onclick="closeGantiKodeKalk()">Batal</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -973,15 +1012,79 @@ function updateInNamaList(){
 }
 function updateOutNamaList(){fillDL('dl-out-nama',getNames(document.getElementById('out-kat').value));updateOutLotList()}
 function updateOutLotList(){fillDL('dl-out-lot',getLots(document.getElementById('out-nama').value.trim()))}
+function updateOutLotInfo(){
+  var nama=document.getElementById('out-nama').value.trim();
+  var satuan=document.getElementById('out-satuan').value;
+  var el=document.getElementById('out-lot-info');
+  if(!nama){el.style.display='none';return}
+  var lots=getLotBreakdown(nama,satuan);
+  if(!lots.length){el.style.display='none';return}
+  var today_=today();
+  var rows=lots.map(function(l,i){
+    var sisa=+(l.masuk-l.keluar).toFixed(4);
+    var daysAgo=l.tgl?Math.round((new Date(today_)-new Date(l.tgl))/864e5):null;
+    var ageStr=daysAgo===0?'hari ini':daysAgo!=null?daysAgo+'h lalu':'';
+    var badge=i===0&&lots.length>1?'<span style="background:#fff3cd;color:#a06000;border:1px solid #e8c96a;border-radius:3px;padding:0px 5px;font-size:9px;margin-left:3px">PAKAI DULU</span>':'';
+    var expStr=l.exp?'<span style="color:#aaa;font-size:10px;margin-left:4px">exp '+l.exp+'</span>':'';
+    return'<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap">'+
+      '<span style="font-size:11px;font-weight:500;color:#111;min-width:110px">'+l.lot+'</span>'+badge+
+      '<span style="font-size:11px;color:#1a7a3a;font-weight:500">'+sisa+' '+satuan+'</span>'+
+      '<span style="font-size:10px;color:#aaa">'+ageStr+'</span>'+expStr+
+    '</div>';
+  }).join('');
+  el.innerHTML='<div style="background:#f7f9ff;border:1px solid #d0dcf5;border-radius:5px;padding:7px 10px">'+
+    '<div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#1a3a8a;margin-bottom:5px">Stok tersedia per lot (FIFO)</div>'+
+    rows+'</div>';
+  el.style.display='block';
+}
 function updateOutSisa(){
   var nama=document.getElementById('out-nama').value.trim();
   var satuan=document.getElementById('out-satuan').value;
   var jml=parseFloat(document.getElementById('out-jml').value)||0;
   var el=document.getElementById('out-sisa-display');
-  if(!nama){el.innerHTML='<span style="color:#999">— pilih item dulu</span>';return}
+  var fifoPanel=document.getElementById('fifo-panel');
+  var fifoPanelBody=document.getElementById('fifo-panel-body');
+  if(!nama){el.innerHTML='<span style="color:#999">— pilih item dulu</span>';fifoPanel.classList.remove('show');return}
   var ada=getSisa(nama,satuan);var sisa=+(ada-jml).toFixed(4);
   var cls=sisa>50?'sisa-ok':sisa>10?'sisa-warn':'sisa-low';
   el.innerHTML='<span style="color:#555;font-size:11px">ada: '+ada+' '+satuan+'</span><span style="color:#ccc;margin:0 4px">&rarr;</span><span class="sisa-inline '+cls+'">'+sisa+' '+satuan+'</span>';
+  // FIFO preview
+  if(jml>0&&nama){
+    var lots=getLotBreakdown(nama,satuan);
+    if(!lots.length){fifoPanel.classList.remove('show');return}
+    var plan=calcFifoPlan(lots,jml);
+    var html='';
+    if(plan.used.length===0){
+      html='<span class="fifo-warn">&#9888; Stok tidak cukup untuk jumlah ini.</span>';
+    } else {
+      var isMixed=plan.used.length>1;
+      html+=plan.used.map(function(u,i){
+        var badge=isMixed&&i===0?'<span style="background:#fff3cd;color:#a06000;border:1px solid #e8c96a;border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">lama</span>':isMixed?'<span style="background:#e8f0fe;color:#1a3a8a;border:1px solid #a8c0f0;border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">baru</span>':'';
+        return'<div class="fifo-lot-line">&#8594; <b>'+u.lot+'</b>'+badge+': ambil <b>'+u.take+' '+satuan+'</b>'+(u.tgl?' (masuk '+u.tgl+')':'')+'</div>';
+      }).join('');
+      if(isMixed) html='<div style="font-size:9px;letter-spacing:0.08em;color:#a06000;margin-bottom:4px">&#9888; CAMPURAN LOT — '+plan.used.length+' lot dipakai</div>'+html;
+      else html='<div style="font-size:9px;letter-spacing:0.08em;color:#1a7a3a;margin-bottom:4px">&#10003; 1 lot saja — pakai lot lama</div>'+html;
+      if(plan.remaining>0) html+='<div class="fifo-warn" style="margin-top:4px">&#9888; Masih kurang '+plan.remaining+' '+satuan+' setelah semua lot habis!</div>';
+    }
+    fifoPanelBody.innerHTML=html;
+    fifoPanel.classList.add('show');
+  } else {
+    fifoPanel.classList.remove('show');
+  }
+}
+
+// Calculate FIFO plan: given sorted lots (oldest first) and needed qty, return which lots to take from
+function calcFifoPlan(lots, needed){
+  var used=[];var remaining=needed;
+  for(var i=0;i<lots.length&&remaining>0.0001;i++){
+    var avail=+(lots[i].masuk-lots[i].keluar).toFixed(4);
+    if(avail>0){
+      var take=+Math.min(avail,remaining).toFixed(4);
+      used.push({lot:lots[i].lot,take:take,tgl:lots[i].tgl,exp:lots[i].exp});
+      remaining=+(remaining-take).toFixed(4);
+    }
+  }
+  return{used:used,remaining:remaining>0.0001?+remaining.toFixed(4):0};
 }
 
 async function addMasuk(){
@@ -1002,14 +1105,29 @@ async function addKeluar(){
   if(!jml||jml<=0){toast('Jumlah harus lebih dari 0');return}
   var satuan=document.getElementById('out-satuan').value;
   if(jml>getSisa(nama,satuan)){toast('Jumlah keluar melebihi sisa stok');return}
+  // FIFO: determine lot usage
+  var manualLot=document.getElementById('out-lot').value.trim();
+  var lots=getLotBreakdown(nama,satuan);
+  var plan=calcFifoPlan(lots,jml);
+  var fifoCat='';
+  var autoLot=manualLot;
+  if(!manualLot&&plan.used.length>0){
+    if(plan.used.length===1){autoLot=plan.used[0].lot;}
+    else{autoLot=plan.used[0].lot;fifoCat='FIFO: '+plan.used.map(function(u){return u.lot+'×'+u.take}).join(' + ');}
+  }
+  var catNotes=document.getElementById('out-cat').value.trim();
+  if(fifoCat) catNotes=catNotes?(catNotes+' | '+fifoCat):fifoCat;
   var btn=document.getElementById('btn-save-out');
   btn.disabled=true;btn.textContent='Menyimpan...';
-  await insertRow({id:Date.now(),tgl:document.getElementById('out-tgl').value||today(),jam:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),kat:document.getElementById('out-kat').value,nama:nama,jenis:'Keluar',jml:jml,satuan:satuan,lot:document.getElementById('out-lot').value.trim(),supplier:'',batch:document.getElementById('out-batch').value.trim(),exp:'',cat:document.getElementById('out-cat').value.trim()});
+  await insertRow({id:Date.now(),tgl:document.getElementById('out-tgl').value||today(),jam:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),kat:document.getElementById('out-kat').value,nama:nama,jenis:'Keluar',jml:jml,satuan:satuan,lot:autoLot,supplier:'',batch:document.getElementById('out-batch').value.trim(),exp:'',cat:catNotes});
   btn.disabled=false;btn.textContent='− Simpan Keluar';
-  toast('Stok keluar tersimpan ✓');resetOut();
+  // Show FIFO summary toast
+  if(plan.used.length>1) toast('Tersimpan ✓ — pakai '+plan.used.length+' lot (FIFO)');
+  else toast('Stok keluar tersimpan ✓');
+  resetOut();
 }
 function resetIn(){['in-nama','in-jml','in-lot','in-exp','in-cat','in-supplier'].forEach(function(id){document.getElementById(id).value=''});document.getElementById('in-kode').value='';document.getElementById('in-tgl').value=today();document.getElementById('lot-hint').textContent='— pilih kode bahan untuk generate'}
-function resetOut(){['out-nama','out-jml','out-lot','out-batch','out-cat'].forEach(function(id){document.getElementById(id).value=''});document.getElementById('out-tgl').value=today();document.getElementById('out-sisa-display').innerHTML='<span style="color:#999">— pilih item & isi jumlah</span>'}
+function resetOut(){['out-nama','out-jml','out-lot','out-batch','out-cat'].forEach(function(id){document.getElementById(id).value=''});document.getElementById('out-tgl').value=today();document.getElementById('out-sisa-display').innerHTML='<span style="color:#999">— pilih item & isi jumlah</span>';document.getElementById('fifo-panel').classList.remove('show');document.getElementById('out-lot-info').style.display='none';}
 async function deleteEntry(id,silent){await deleteRow(id,silent)}
 async function clearAll(){if(!confirm('Hapus semua data di Google Sheets?'))return;await deleteAll();}
 function clearPeriod(){document.getElementById('f-dari').value='';document.getElementById('f-sampai').value='';renderLog()}
@@ -1169,15 +1287,77 @@ function renderStok(){
   });
   document.getElementById('stok-count').textContent=keys.length+' item';
   document.getElementById('stok-check-all').checked=false;
-  if(!keys.length){document.getElementById('stok-body').innerHTML='<tr><td colspan="10" class="empty">Belum ada data stok</td></tr>';return}
-  document.getElementById('stok-body').innerHTML=keys.sort(function(a,b){return map[a].kat.localeCompare(map[b].kat)||map[a].nama.localeCompare(map[b].nama)}).map(function(k){
+  if(!keys.length){document.getElementById('stok-body').innerHTML='<tr><td colspan="12" class="empty">Belum ada data stok</td></tr>';return}
+  var sorted=keys.sort(function(a,b){return map[a].kat.localeCompare(map[b].kat)||map[a].nama.localeCompare(map[b].nama)});
+  var html='';
+  sorted.forEach(function(k){
     var it=map[k];var sisa=+(it.masuk-it.keluar).toFixed(4);
     var st=sisa>50?'ok':sisa>10?'warn':'low';
     var stLabel=st==='ok'?'<span style="color:var(--green);font-size:11px">&#9679; Aman</span>':st==='warn'?'<span style="color:var(--amber);font-size:11px">&#9679; Hampir habis</span>':'<span style="color:var(--red);font-size:11px">&#9679; Kritis</span>';
     var idsJson=JSON.stringify(it.ids).replace(/"/g,'&quot;');
     var cbStyle=stokHapusMode?'cursor:pointer':'cursor:pointer;display:none';
-    return'<tr><td class="stok-cb-col" style="'+(stokHapusMode?'':'padding:0;overflow:hidden')+'"><input type="checkbox" class="stok-cb" data-key="'+encodeURIComponent(k)+'" data-ids="'+idsJson+'" style="'+cbStyle+'"></td><td>'+katBadge(it.kat)+'</td><td title="'+it.nama+'">'+it.nama+'</td><td style="color:#1a7a3a">'+it.masuk+'</td><td style="color:#cc2200">'+it.keluar+'</td><td class="'+sisaCls(sisa)+'">'+sisa+'</td><td style="color:#555">'+it.satuan+'</td><td>'+expLabel(nearestExp(it.nama,it.satuan))+'</td><td>'+stLabel+'</td><td><button style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:12px;padding:2px 6px;color:#555;white-space:nowrap" onclick="openStokEditModal('+JSON.stringify(it.ids)+',\''+it.nama.replace(/'/g,"\\'")+'\')" title="Edit item">&#9998;</button></td><td><button class="btn-del" title="Hapus semua entri item ini" onclick="hapusStokByIds('+JSON.stringify(it.ids)+')">&#128465;</button></td></tr>';
-  }).join('');
+    var lotCount=getLotBreakdown(it.nama,it.satuan).length;
+    var lotBadge=lotCount>0?'<button class="lot-expand-btn" id="lotbtn-'+encodeURIComponent(k)+'" onclick="toggleLotBreakdown(\''+encodeURIComponent(k)+'\')" title="Lihat per lot">'+lotCount+' lot</button>':'<span style="color:#ccc;font-size:11px">—</span>';
+    html+='<tr id="stokrow-'+encodeURIComponent(k)+'"><td class="stok-cb-col" style="'+(stokHapusMode?'':'padding:0;overflow:hidden')+'"><input type="checkbox" class="stok-cb" data-key="'+encodeURIComponent(k)+'" data-ids="'+idsJson+'" style="'+cbStyle+'"></td><td>'+katBadge(it.kat)+'</td><td title="'+it.nama+'">'+it.nama+'</td><td style="color:#1a7a3a">'+it.masuk+'</td><td style="color:#cc2200">'+it.keluar+'</td><td class="'+sisaCls(sisa)+'">'+sisa+'</td><td style="color:#555">'+it.satuan+'</td><td>'+expLabel(nearestExp(it.nama,it.satuan))+'</td><td>'+stLabel+'</td><td>'+lotBadge+'</td><td><button style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:12px;padding:2px 6px;color:#555;white-space:nowrap" onclick="openStokEditModal('+JSON.stringify(it.ids)+',\''+it.nama.replace(/'/g,"\\'")+'\')" title="Edit item">&#9998;</button></td><td><button class="btn-del" title="Hapus semua entri item ini" onclick="hapusStokByIds('+JSON.stringify(it.ids)+')">&#128465;</button></td></tr>';
+    // placeholder row for lot breakdown (hidden)
+    html+='<tr class="lot-breakdown-row" id="lotbd-'+encodeURIComponent(k)+'" style="display:none"><td colspan="12"><div class="lot-breakdown-inner" id="lotbd-inner-'+encodeURIComponent(k)+'"></div></td></tr>';
+  });
+  document.getElementById('stok-body').innerHTML=html;
+}
+
+// Returns array of {lot, tgl, sisaQty, exp} sorted oldest first (FIFO order)
+function getLotBreakdown(nama, satuan){
+  // Build per-lot balance
+  var lotMap={};
+  // Process chronologically (oldest first = lowest id)
+  var entries=data.filter(function(e){return e.nama===nama&&e.satuan===satuan}).slice().sort(function(a,b){return a.id-b.id});
+  entries.forEach(function(e){
+    var lot=e.lot||'(no lot)';
+    if(!lotMap[lot])lotMap[lot]={lot:lot,tgl:e.jenis==='Masuk'?cleanDate(e.tgl):'',exp:e.exp?cleanDate(e.exp):'',masuk:0,keluar:0};
+    if(e.jenis==='Masuk'){lotMap[lot].masuk+=Number(e.jml);if(!lotMap[lot].tgl)lotMap[lot].tgl=cleanDate(e.tgl);if(!lotMap[lot].exp&&e.exp)lotMap[lot].exp=cleanDate(e.exp);}
+    else {
+      // FIFO: deduct from oldest lots first, but per-lot field in entry overrides
+      var targetLot=e.lot||null;
+      if(targetLot&&lotMap[targetLot]){lotMap[targetLot].keluar+=Number(e.jml);}
+      else{
+        // deduct from oldest available
+        var remaining=Number(e.jml);
+        var orderedLots=Object.values(lotMap).sort(function(a,b){return(a.tgl||'').localeCompare(b.tgl||'')});
+        for(var i=0;i<orderedLots.length&&remaining>0;i++){
+          var avail=+(orderedLots[i].masuk-orderedLots[i].keluar).toFixed(4);
+          if(avail>0){var take=Math.min(avail,remaining);lotMap[orderedLots[i].lot].keluar+=take;remaining=+(remaining-take).toFixed(4);}
+        }
+      }
+    }
+  });
+  // Return lots with positive balance, sorted oldest first
+  return Object.values(lotMap).filter(function(l){return+(l.masuk-l.keluar).toFixed(4)>0}).sort(function(a,b){return(a.tgl||'').localeCompare(b.tgl||'')});
+}
+
+var openLotBreakdowns={};
+function toggleLotBreakdown(encKey){
+  var row=document.getElementById('lotbd-'+encKey);
+  var btn=document.getElementById('lotbtn-'+encKey);
+  if(!row)return;
+  if(openLotBreakdowns[encKey]){
+    row.style.display='none';btn.classList.remove('active');openLotBreakdowns[encKey]=false;
+  } else {
+    var k=decodeURIComponent(encKey);
+    var parts=k.split('||');var nama=parts[0],satuan=parts[1];
+    var lots=getLotBreakdown(nama,satuan);
+    var today_=today();
+    var rows=lots.map(function(l,i){
+      var sisa=+(l.masuk-l.keluar).toFixed(4);
+      var ageLabel='';
+      if(l.tgl){var daysAgo=Math.round((new Date(today_)-new Date(l.tgl))/864e5);ageLabel=daysAgo===0?'hari ini':daysAgo+' hari lalu';}
+      var orderBadge=i===0&&lots.length>1?'<span style="background:#fff3cd;color:#a06000;border:1px solid #e8c96a;border-radius:3px;padding:1px 6px;font-size:9px;margin-left:4px">PAKAI DULU</span>':'';
+      var expHtml=l.exp?expLabel(l.exp):'<span style="color:#ccc">—</span>';
+      var ageClass=i===0&&lots.length>1?'lot-age-old':'lot-age-new';
+      return'<tr><td><b>'+l.lot+'</b>'+orderBadge+'</td><td>'+(l.tgl||'—')+' <span class="'+ageClass+'">'+ageLabel+'</span></td><td style="color:var(--green);font-weight:500">'+sisa+' '+satuan+'</td><td>'+expHtml+'</td></tr>';
+    }).join('');
+    document.getElementById('lotbd-inner-'+encKey).innerHTML='<div class="lot-bd-title">&#128197; Stok per Lot (FIFO — urut dari paling lama)</div><table class="lot-bd-table"><thead><tr><th>No. Lot</th><th>Tgl masuk</th><th>Sisa</th><th>Expired</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    row.style.display='';btn.classList.add('active');openLotBreakdowns[encKey]=true;
+  }
 }
 function toggleAllStok(checked){
   document.querySelectorAll('.stok-cb').forEach(function(cb){cb.checked=checked});
@@ -1373,6 +1553,25 @@ function getKalkInputs(){
   });
   return result;
 }
+function renderKalkFifoRow(item){
+  var lots=getLotBreakdown(item.nama,item.sat);
+  var plan=calcFifoPlan(lots,item.butuh);
+  if(!lots.length) return'<div style="font-size:10px;color:#999;padding:4px 0 6px 2px">— belum ada data lot untuk bahan ini</div>';
+  var isMixed=plan.used.length>1;
+  var hasShortage=plan.remaining>0.0001;
+  var headerColor=hasShortage?'#cc2200':isMixed?'#a06000':'#1a7a3a';
+  var headerText=hasShortage?'⚠ Stok kurang — tidak semua lot cukup':isMixed?'⚠ Campuran lot':'✓ Satu lot cukup';
+  var lines=plan.used.map(function(u,i){
+    var badge=isMixed&&i===0?'<span style="background:#fff3cd;color:#a06000;border:1px solid #e8c96a;border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">lama</span>':isMixed?'<span style="background:#e8f0fe;color:#1a3a8a;border:1px solid #a8c0f0;border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">baru</span>':'';
+    return'<div style="font-size:11px;padding:2px 0;color:#333">→ <b style="color:#111">'+u.lot+'</b>'+badge+' : <b style="color:#1a3a8a">'+u.take+' '+item.sat+'</b>'+(u.tgl?' <span style="color:#aaa;font-size:10px">(masuk '+u.tgl+')</span>':'')+'</div>';
+  }).join('');
+  var shortageHtml=hasShortage?'<div style="font-size:11px;color:#cc2200;margin-top:3px;font-weight:500">⚠ Kurang '+plan.remaining+' '+item.sat+' — perlu restock!</div>':'';
+  return'<div style="padding:6px 10px 8px;background:#f7f9ff;border-top:1px solid #e4eaf8;border-radius:0 0 6px 6px">'+
+    '<div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:'+headerColor+';margin-bottom:5px;font-weight:500">'+headerText+'</div>'+
+    lines+shortageHtml+
+  '</div>';
+}
+
 function hitung(){
   var inputs=getKalkInputs();if(!inputs.length){toast('Pilih minimal 1 produk dan isi jumlah pcs');return}
   var batchSize=parseInt(document.getElementById('kalk-batch-size').value)||0;
@@ -1389,7 +1588,11 @@ function hitung(){
   var rows=keys.map(function(k){
     var item=kebutuhan[k];var ada=getSisa(item.nama,item.sat);var cukup=ada>=item.butuh;if(!cukup)allOk=false;
     var kurang=cukup?'':' (kurang '+(+(item.butuh-ada).toFixed(4))+' '+item.sat+')';
-    return'<div class="hasil-row"><span title="'+item.detail.join(' | ')+'">'+item.nama+'</span><span>'+item.butuh+' '+item.sat+'</span><span style="color:'+(cukup?'#1a7a3a':'#cc2200')+'">'+ada+' '+item.sat+'</span><span class="'+(cukup?'ok':'kurang')+'">'+(cukup?'✓ Cukup':'✗'+kurang)+'</span></div>';
+    var fifoHtml=renderKalkFifoRow(item);
+    return'<div style="border-bottom:1px solid #f0f0f0">'+
+      '<div class="hasil-row" style="border-bottom:none"><span title="'+item.detail.join(' | ')+'">'+item.nama+'</span><span>'+item.butuh+' '+item.sat+'</span><span style="color:'+(cukup?'#1a7a3a':'#cc2200')+'">'+ada+' '+item.sat+'</span><span class="'+(cukup?'ok':'kurang')+'">'+(cukup?'✓ Cukup':'✗'+kurang)+'</span></div>'+
+      fifoHtml+
+    '</div>';
   }).join('');
   var produkSummary=inputs.map(function(i){return i.qty+' pcs '+i.key}).join(', ');
   var batchInfo=batchSize>0?'<span class="sum-item">Besar Batch: <b>'+batchSize+' pcs/batch</b></span>':'';
@@ -1444,6 +1647,19 @@ function gantiKode(){
   if(baru.length<4){err.textContent='Kode baru minimal 4 karakter';err.style.display='block';return}
   if(baru!==konfirm){err.textContent='Konfirmasi kode tidak cocok';err.style.display='block';return}
   localStorage.setItem(RESEP_KODE_KEY,baru);closeGantiKode();toast('Kode resep berhasil diubah ✓');
+}
+function openGantiKodeKalk(){
+  document.getElementById('gkk-lama').value='';document.getElementById('gkk-baru').value='';document.getElementById('gkk-konfirm').value='';
+  document.getElementById('gkk-err').style.display='none';document.getElementById('ganti-kode-kalk-modal').style.display='flex';
+  setTimeout(function(){document.getElementById('gkk-lama').focus()},100);
+}
+function closeGantiKodeKalk(){document.getElementById('ganti-kode-kalk-modal').style.display='none'}
+function gantiKodeKalk(){
+  var lama=document.getElementById('gkk-lama').value;var baru=document.getElementById('gkk-baru').value;var konfirm=document.getElementById('gkk-konfirm').value;var err=document.getElementById('gkk-err');
+  if(lama!==getKalkKode()){err.textContent='Kode lama salah';err.style.display='block';return}
+  if(baru.length<4){err.textContent='Kode baru minimal 4 karakter';err.style.display='block';return}
+  if(baru!==konfirm){err.textContent='Konfirmasi kode tidak cocok';err.style.display='block';return}
+  localStorage.setItem(KALK_KODE_KEY,baru);closeGantiKodeKalk();toast('Kode kalkulator berhasil diubah ✓');
 }
 // ══════════════════════════════════════════════
 // PRODUK JADI & JADWAL PRODUKSI
