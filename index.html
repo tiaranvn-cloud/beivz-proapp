@@ -2066,13 +2066,15 @@ function renderJadwalSummary(){
 }
 
 // ══════════════════════════════════════════════
-// MASTER DATA — KODE BAHAN (localStorage CRUD)
+// MASTER DATA — KODE BAHAN (Google Sheets CRUD, sheet="master")
 // ══════════════════════════════════════════════
 
-var MASTER_KEY = 'beivz_master_v1';
 var masterKat = 'Bahan Baku';
 var masterEditKode = null; // kode being edited
+var masterRows = []; // raw rows loaded from sheet "master": [{id,kat,kode,nama}, ...]
+var masterLoaded = false; // becomes true once first successful fetch happens
 
+// Fallback data used only if the "master" sheet can't be reached yet (e.g. still loading, or offline)
 var KODE_BAHAN_DEFAULT = {
   'Bahan Baku':[
     {kode:'OB-01',nama:'Beeswax'},{kode:'OB-02',nama:'Canola Oil'},{kode:'OB-03',nama:'Vaseline'},
@@ -2101,14 +2103,34 @@ var KODE_BAHAN_DEFAULT = {
   ]
 };
 
-function getMasterData(){
+// Loads all rows from the "master" sheet in Google Sheets into masterRows.
+async function loadMasterData(){
+  if(SCRIPT_URL.includes('PASTE_URL')) return;
   try{
-    var d = JSON.parse(localStorage.getItem(MASTER_KEY)||'null');
-    if(!d){ d = JSON.parse(JSON.stringify(KODE_BAHAN_DEFAULT)); localStorage.setItem(MASTER_KEY,JSON.stringify(d)); }
-    return d;
-  }catch(e){ return JSON.parse(JSON.stringify(KODE_BAHAN_DEFAULT)); }
+    var res = await fetch(SCRIPT_URL + "?sheet=master");
+    var rows = await res.json();
+    masterRows = rows.map(function(r){ return {id:r.id, kat:r.kat, kode:r.kode, nama:r.nama}; });
+    masterLoaded = true;
+  }catch(e){
+    // keep whatever we had before; fallback in getMasterData() covers the "never loaded" case
+  }
+  rebuildBahanList();
+  var mv = document.getElementById('view-master');
+  if(mv && mv.style.display!=='none') renderMasterList();
 }
-function saveMasterData(d){ localStorage.setItem(MASTER_KEY,JSON.stringify(d)); rebuildBahanList(); }
+
+// Returns master data grouped by kategori, e.g. {'Bahan Baku':[{id,kode,nama},...], ...}
+function getMasterData(){
+  if(masterLoaded){
+    var d = {'Bahan Baku':[],'Produk Jadi':[],'Bahan Kemas':[]};
+    masterRows.forEach(function(r){
+      if(!d[r.kat]) d[r.kat]=[];
+      d[r.kat].push({id:r.id, kode:r.kode, nama:r.nama});
+    });
+    return d;
+  }
+  return JSON.parse(JSON.stringify(KODE_BAHAN_DEFAULT));
+}
 
 function rebuildBahanList(){
   var d = getMasterData();
@@ -2158,27 +2180,50 @@ function renderMasterList(){
   }).join('');
 }
 
-function saveMasterItem(){
+async function saveMasterItem(){
   var kode = document.getElementById('mf-kode').value.trim().toUpperCase();
   var nama = document.getElementById('mf-nama').value.trim();
   if(!kode){toast('Kode tidak boleh kosong');return}
   if(!nama){toast('Nama tidak boleh kosong');return}
   var d = getMasterData();
   if(!d[masterKat]) d[masterKat]=[];
-  if(masterEditKode){
-    // editing existing
-    var idx = d[masterKat].findIndex(function(x){return x.kode===masterEditKode});
-    if(idx>=0){ d[masterKat][idx]={kode:kode,nama:nama}; }
-    else { d[masterKat].push({kode:kode,nama:nama}); }
-    toast('Item diperbarui ✓');
-  } else {
-    // check duplicate kode
-    var exists = d[masterKat].find(function(x){return x.kode===kode});
-    if(exists){toast('Kode sudah ada, gunakan Edit');return}
-    d[masterKat].push({kode:kode,nama:nama});
-    toast('Item ditambahkan ✓');
+  var saveBtn = document.getElementById('master-save-btn');
+  if(saveBtn) saveBtn.disabled = true;
+  setSync(true);
+  try{
+    if(masterEditKode){
+      // editing existing: delete old row then insert a fresh one (sheet backend has no "update" action)
+      var existing = d[masterKat].find(function(x){return x.kode===masterEditKode});
+      if(!existing){ toast('Item tidak ditemukan'); setSync(false); if(saveBtn) saveBtn.disabled=false; return; }
+      await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',sheet:'master',id:existing.id})});
+      var newId = Date.now();
+      var res = await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'insert',sheet:'master',data:{id:newId,kat:masterKat,kode:kode,nama:nama}})});
+      var rj = await res.json();
+      if(rj.result!=='success') throw new Error();
+      masterRows = masterRows.filter(function(r){return r.id!==existing.id});
+      masterRows.push({id:newId,kat:masterKat,kode:kode,nama:nama});
+      toast('Item diperbarui ✓');
+    } else {
+      // check duplicate kode
+      var exists = d[masterKat].find(function(x){return x.kode===kode});
+      if(exists){toast('Kode sudah ada, gunakan Edit'); setSync(false); if(saveBtn) saveBtn.disabled=false; return;}
+      var newId2 = Date.now();
+      var res2 = await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'insert',sheet:'master',data:{id:newId2,kat:masterKat,kode:kode,nama:nama}})});
+      var rj2 = await res2.json();
+      if(rj2.result!=='success') throw new Error();
+      masterRows.push({id:newId2,kat:masterKat,kode:kode,nama:nama});
+      toast('Item ditambahkan ✓');
+    }
+    setOnline(true);
+  }catch(e){
+    toast('Gagal menyimpan ke Google Sheets.');
+    setSync(false);
+    if(saveBtn) saveBtn.disabled=false;
+    return;
   }
-  saveMasterData(d);
+  setSync(false);
+  if(saveBtn) saveBtn.disabled=false;
+  rebuildBahanList();
   cancelMasterEdit();
   renderMasterList();
 }
@@ -2211,13 +2256,26 @@ function cancelMasterEdit(){
   if(cancelBtn) cancelBtn.style.display='none';
 }
 
-function deleteMasterItem(kode){
+async function deleteMasterItem(kode){
   if(!confirm('Hapus kode "'+kode+'"? Pastikan kode ini tidak sedang dipakai di resep.')) return;
   var d = getMasterData();
-  d[masterKat] = (d[masterKat]||[]).filter(function(x){return x.kode!==kode});
-  saveMasterData(d);
+  var item = (d[masterKat]||[]).find(function(x){return x.kode===kode});
+  if(!item) return;
+  setSync(true);
+  try{
+    var res = await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',sheet:'master',id:item.id})});
+    var rj = await res.json();
+    if(rj.result!=='success') throw new Error();
+    masterRows = masterRows.filter(function(r){return r.id!==item.id});
+    toast('Kode dihapus ✓');
+  }catch(e){
+    toast('Gagal menghapus dari Google Sheets.');
+    setSync(false);
+    return;
+  }
+  setSync(false);
+  rebuildBahanList();
   renderMasterList();
-  toast('Kode dihapus ✓');
 }
 
 function syncSkuPj(){
@@ -2328,10 +2386,10 @@ var _origSwitchTab=switchTab;
 switchTab=function(tab){if(tab!=='resep')resepUnlocked=false;if(tab!=='kalk')kalkUnlocked=false;_origSwitchTab(tab);};
 
 // Interval otomatis sinkron tiap 15 detik biar data HP kamu dan suami selalu update
-setInterval(function(){ loadData(); loadResep(); }, 15000);
+setInterval(function(){ loadData(); loadResep(); loadMasterData(); }, 15000);
 document.getElementById('in-tgl').value=today();
 document.getElementById('out-tgl').value=today();
-loadResep();addKalkRow();loadData();
+loadResep();addKalkRow();loadData();loadMasterData();
 </script>
 </body>
 </html>
