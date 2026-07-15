@@ -862,6 +862,7 @@ async function loadData(){
     // Urutkan dari ID terbesar (terbaru di atas)
     data = rows.sort((a,b) => b.id - a.id);
     setOnline(true);
+    syncSaldoToSheet();
   }catch(e){
     setOnline(false);
   }finally{
@@ -881,7 +882,7 @@ async function insertRow(row){
       body: JSON.stringify({ action: "insert", sheet: "stock", data: row })
     });
     var resJson = await res.json();
-    if(resJson.result === "success") setOnline(true);
+    if(resJson.result === "success") { setOnline(true); syncSaldoToSheet(); }
     else throw new Error();
   }catch(e){
     data=data.filter(function(d){return d.id!==row.id});
@@ -902,6 +903,7 @@ async function deleteRow(id,silent){
     if(resJson.result === "success") {
       data=data.filter(function(e){return e.id!==id});
       if(!silent){refreshStats();updateInNamaList();updateOutNamaList();renderLog();renderSum();updateExportNamaList();toast('Entri dihapus dari Google Sheets');}
+      syncSaldoToSheet();
     } else throw new Error();
   }catch(e){if(!silent)toast('Gagal menghapus.')}
   setSync(false);
@@ -918,6 +920,7 @@ async function deleteAll(){
     if(resJson.result === "success") {
       data=[];refreshStats();updateInNamaList();updateOutNamaList();renderLog();renderSum();updateExportNamaList();
       toast('Semua data terhapus');
+      syncSaldoToSheet();
     } else throw new Error();
   }catch(e){toast('Gagal menghapus.')}
   setSync(false);
@@ -1149,6 +1152,30 @@ function renderSum(){
   if(!keys.length){document.getElementById('sum-body').innerHTML='<tr><td colspan="7" class="empty">Belum ada data stok</td></tr>';return}
   document.getElementById('sum-body').innerHTML=keys.map(function(k){var it=map[k];var sisa=+(it.masuk-it.keluar).toFixed(4);return'<tr><td>'+katBadge(it.kat)+'</td><td title="'+it.nama+'">'+it.nama+'</td><td style="color:#1a7a3a">'+it.masuk+'</td><td style="color:#cc2200">'+it.keluar+'</td><td class="'+sisaCls(sisa)+'">'+sisa+'</td><td style="color:#555">'+it.satuan+'</td><td>'+expLabel(nearestExp(it.nama,it.satuan))+'</td></tr>'}).join('');
 }
+// Pushes the current computed stock balance (masuk/keluar/sisa per item) into
+// a dedicated "Saldo Stok" tab in Google Sheets, so the running stock level is
+// visible directly in the spreadsheet instead of only inside the app.
+var saldoSyncTimer=null;
+function syncSaldoToSheet(){
+  if(!isOnline) return;
+  clearTimeout(saldoSyncTimer);
+  saldoSyncTimer=setTimeout(function(){ doSyncSaldoNow(); }, 400);
+}
+async function doSyncSaldoNow(){
+  var map={};
+  data.forEach(function(e){
+    var k=e.nama+'||'+e.satuan+'||'+e.kat;
+    if(!map[k])map[k]={kat:e.kat,nama:e.nama,satuan:e.satuan,masuk:0,keluar:0};
+    if(e.jenis==='Masuk')map[k].masuk+=Number(e.jml);else map[k].keluar+=Number(e.jml);
+  });
+  var rows=Object.keys(map).map(function(k){
+    var it=map[k];
+    return {kat:it.kat,nama:it.nama,satuan:it.satuan,masuk:+it.masuk.toFixed(4),keluar:+it.keluar.toFixed(4),sisa:+(it.masuk-it.keluar).toFixed(4),terakhir_update:new Date().toLocaleString('id-ID')};
+  });
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'syncSaldo',sheet:'stock',data:rows})});
+  }catch(e){ /* best-effort: saldo sheet sync failing shouldn't interrupt the app */ }
+}
 function getFilteredData(){
   var q=(document.getElementById('search').value||'').toLowerCase();
   var fk=document.getElementById('fk').value,fj=document.getElementById('fj').value;
@@ -1253,7 +1280,7 @@ async function saveLogEdit(){
   try{
     var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',sheet:'stock',data:e})});
     var j=await res.json();
-    if(j.result==='success')toast('Entri berhasil diperbarui ✓');
+    if(j.result==='success'){toast('Entri berhasil diperbarui ✓');syncSaldoToSheet();}
     else throw new Error();
   }catch(err){toast('Tersimpan lokal. Gagal sync ke Sheets.');}
   setSync(false);
@@ -1410,6 +1437,7 @@ async function saveEdit(){
       return fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',sheet:'stock',data:e})});
     }));
     toast('Item berhasil diperbarui ✓');
+    syncSaldoToSheet();
   }catch(err){toast('Tersimpan lokal. Gagal sync ke Sheets.');}
   setSync(false);
 }
@@ -2192,9 +2220,10 @@ async function saveMasterItem(){
   setSync(true);
   try{
     if(masterEditKode){
-      // editing existing: delete old row then insert a fresh one (sheet backend has no "update" action)
+      // editing existing: delete old row then insert a fresh one (master sheet has no "update" action)
       var existing = d[masterKat].find(function(x){return x.kode===masterEditKode});
       if(!existing){ toast('Item tidak ditemukan'); setSync(false); if(saveBtn) saveBtn.disabled=false; return; }
+      var namaBerubah = existing.nama !== nama;
       await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',sheet:'master',id:existing.id})});
       var newId = Date.now();
       var res = await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'insert',sheet:'master',data:{id:newId,kat:masterKat,kode:kode,nama:nama}})});
@@ -2202,7 +2231,20 @@ async function saveMasterItem(){
       if(rj.result!=='success') throw new Error();
       masterRows = masterRows.filter(function(r){return r.id!==existing.id});
       masterRows.push({id:newId,kat:masterKat,kode:kode,nama:nama});
-      toast('Item diperbarui ✓');
+      // Cascade the rename into every existing stock entry so history stays consistent
+      if(namaBerubah){
+        try{
+          await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'renameNama',sheet:'stock',oldNama:existing.nama,newNama:nama})});
+          data.forEach(function(en){ if(en.nama===existing.nama) en.nama=nama; });
+          refreshStats();updateInNamaList();updateOutNamaList();renderLog();renderSum();if(typeof renderStok==='function')renderStok();updateExportNamaList();
+          syncSaldoToSheet();
+          toast('Item diperbarui, riwayat stok ikut disesuaikan ✓');
+        }catch(errRename){
+          toast('Nama diperbarui di master, tapi gagal menyamakan riwayat stok.');
+        }
+      } else {
+        toast('Item diperbarui ✓');
+      }
     } else {
       // check duplicate kode
       var exists = d[masterKat].find(function(x){return x.kode===kode});
